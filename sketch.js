@@ -1,10 +1,9 @@
-// Western States 100 - Physics Balancing Update
+// Western States 100 - Course Record Balance Update
 let distance = 0;
 let coreTemp = 98.6; 
 let stamina = 100;
-let baseSpeed = 5;
-let currentSpeed = baseSpeed;
-let currentPace = 9.0; 
+let currentPace = 7.5; // Starts at an elite 7:30 min/mi
+let currentSpeed = 60 / currentPace;
 let powerHikeTimer = 0; 
 let runCycle = 0; 
 
@@ -17,6 +16,7 @@ let elapsedMinutes = 0;
 let startOfRaceTime = 300; // 5:00 AM 
 let raceStarted = false; 
 
+// Easily tweak how dark the night gets (0 is bright, 255 is pitch black)
 let maxDarkness = 140; 
 
 const wsProfile = [
@@ -117,29 +117,30 @@ function draw() {
       nausea = max(0, nausea - 0.05);
       if (nausea > 75) stamina -= 0.02;
 
-      currentPace = 9.0; 
-      currentPace += (gels * 0.1); 
-      let staminaPenalty = map(stamina, 100, 0, 0, 8); 
+      // RE-BALANCED PACE ENGINE
+      currentPace = 7.5; // Elite base pace
+      currentPace += (gels * 0.03); // Minimal weight penalty
+      
+      let staminaPenalty = map(stamina, 100, 0, 0, 4); // Max +4 min/mi fatigue
       currentPace += max(0, staminaPenalty);
       
-      // NEW: Exponential heat penalty curve
       if (coreTemp > 100) {
          let heatFactor = map(coreTemp, 100, 106, 0, 1);
-         currentPace += (heatFactor * heatFactor) * 10;
+         currentPace += (heatFactor * heatFactor) * 5; // Max +5 min/mi heat penalty
       }
       
       if (grade > 0) {
-         let hillPenalty = grade / 15; 
+         let hillPenalty = grade / 40; // Less punishing climbs
          if (powerHikeTimer > 0) {
             hillPenalty *= 0.2; 
          }
          currentPace += hillPenalty;
       } else if (grade < 0) {
-         let downHillBonus = grade / 40; 
+         let downHillBonus = grade / 60; // Smoother downhill bonus
          currentPace += downHillBonus; 
       }
       
-      currentPace = constrain(currentPace, 4.5, 40.0);
+      currentPace = constrain(currentPace, 4.0, 30.0);
       currentSpeed = 60 / currentPace; 
   }
 
@@ -164,14 +165,12 @@ function draw() {
     if (powerHikeTimer > 0) effort *= 0.5; 
     stamina -= effort;
     
-    // NEW: Slower digestion while running
     nausea = max(0, nausea - 0.015); 
     
     let ambientHeat = map(currentElev, 1000, 9000, 1.5, 0.2);
     if (darkness > 50) ambientHeat *= 0.5; 
     coreTemp += (currentSpeed * 0.0005) * ambientHeat; 
   } else if (raceStarted) {
-    // NEW: Slower recovery while standing still
     nausea = max(0, nausea - 0.04); 
     coreTemp = max(98.6, coreTemp - 0.01);
     stamina = min(100, stamina + 0.05);
@@ -202,7 +201,6 @@ function draw() {
           fill(100, 150, 255); stroke(0); strokeWeight(2); text("COOLING DOWN...", width/2, 150); noStroke();
           coreTemp = max(98.6, coreTemp - 0.03); 
           stamina = min(100, stamina + 0.05);  
-          // NEW: Slower digestion while actively resting and cooling
           nausea = max(0, nausea - 0.08);  
         }
         if (keyIsDown(70)) { 
@@ -273,8 +271,8 @@ function resetGame() {
   distance = 0;
   coreTemp = 98.6; 
   stamina = 100;
-  currentSpeed = baseSpeed;
-  currentPace = 9.0; 
+  currentPace = 7.5; 
+  currentSpeed = 60 / currentPace;
   powerHikeTimer = 0; 
   runCycle = 0; 
   gels = 6;
