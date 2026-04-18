@@ -2,7 +2,7 @@
 let distance = 0;
 let coreTemp = 98.6; 
 let stamina = 100;
-let currentPace = 7.5; // Starts at an elite 7:30 min/mi
+let currentPace = 7.75; // Starts at an elite 7:45 min/mi
 let currentSpeed = 60 / currentPace;
 let powerHikeTimer = 0; 
 let runCycle = 0; 
